@@ -1,0 +1,90 @@
+ const hi = {
+	translation: {
+		common: {
+			next: 'आगे',
+			back: 'पीछे',
+			submit: 'जमा करें',
+			cancel: 'रद्द करें',
+			save: 'सहेजें',
+			edit: 'संपादित करें',
+			delete: 'हटाएं',
+			loading: 'लोड हो रहा है...',
+			resend: 'पुनः भेजें',
+			verify: 'सत्यापित करें',
+		},
+		auth: {
+			login: 'लॉग इन',
+			loginAsHcp: 'लॉग इन as HCP',
+			loginAsPatient: 'लॉग इन as Patient',
+			signup: 'साइन अप',
+			email: 'ईमेल',
+			password: 'पासवर्ड',
+			forgotPassword: 'पासवर्ड भूल गए?',
+			mobileNumber: {
+				title: 'मोबाइल नंबर दर्ज करें',
+				subtitle: 'आधार कार्ड से लिंक किया गया',
+				countryCode: '+91',
+				placeholder: 'अपना मोबाइल नंबर दर्ज करें',
+				validation: {
+					required: 'मोबाइल नंबर आवश्यक है',
+					invalid: 'मोबाइल नंबर मान्य नहीं है',
+					minLength: 'फ़ील्ड में कम से कम 10 अंक होने चाहिए',
+					maxLength: 'फ़ील्ड में अधिकतम 10 अंक हो सकते हैं',
+				},
+			},
+			verifyOtp: {
+				title: 'अपना मोबाइल नंबर सत्यापित करें',
+				enterOtp: 'ओटीपी दर्ज करें जो भेजा गया है',
+				sentTo: 'पर भेजा गया',
+				edit: 'संपादित करें',
+				resendOtp: 'ओटीपी पुनः भेजें',
+				resendIn: 'पुनः भेजें',
+				seconds: 'सेकंड में',
+				incorrectOtp: 'कृपया सही ओटीपी दर्ज करें',
+				otpSentSuccess: 'ओटीपी सफलतापूर्वक नंबर पर भेज दिया गया है',
+				aadharNote: '*आगे बढ़ने से पहले अपना आधार कार्ड तैयार रखें',
+				verifyAndProceed: 'सत्यापित करें और ईकेवाईसी के लिए आगे बढ़ें',
+				login: 'लॉग इन',
+				validation: {
+					digitsOnly: 'ओटीपी में केवल अंक होने चाहिए',
+					length: 'ओटीपी में ठीक 6 अंक होने चाहिए',
+					required: 'ओटीपी आवश्यक है',
+				},
+			},
+			otp: {
+				title: 'ओटीपी सत्यापन',
+				subtitle: 'आपके मोबाइल नंबर पर भेजा गया 6 अंकों का कोड दर्ज करें',
+				resendText: 'ओटीपी नहीं मिला?',
+				resendButton: 'पुनः भेजें',
+				validation: {
+					required: 'ओटीपी आवश्यक है',
+					invalid: 'अमान्य ओटीपी',
+					length: 'ओटीपी में 6 अंक होने चाहिए',
+				},
+				timer: {
+					text: 'पुनः भेजने के लिए प्रतीक्षा करें',
+					seconds: 'सेकंड',
+				},
+			},
+			termsAndConditions: {
+				agree: 'मैं सहमत हूं',
+				linkText: 'नियम और शर्तें',
+				validation: 'कृपया नियम और शर्तों से सहमत हों',
+			},
+		},
+		profile: {
+			personalInfo: 'व्यक्तिगत जानकारी',
+			name: 'नाम',
+			phone: 'फ़ोन नंबर',
+			address: 'पता',
+			occupation: 'व्यवसाय',
+		},
+		validation: {
+			required: 'यह फ़ील्ड आवश्यक है',
+			invalidEmail: 'कृपया एक वैध ईमेल दर्ज करें',
+			invalidPhone: 'कृपया एक वैध फ़ोन नंबर दर्ज करें',
+		},
+	},
+};
+
+export default hi

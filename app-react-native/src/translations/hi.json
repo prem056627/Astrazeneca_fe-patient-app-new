@@ -1,0 +1,31 @@
+{
+  "common": {
+    "next": "आगे",
+    "back": "पीछे",
+    "submit": "जमा करें",
+    "cancel": "रद्द करें",
+    "save": "सहेजें",
+    "edit": "संपादित करें",
+    "delete": "हटाएं",
+    "loading": "लोड हो रहा है..."
+  },
+  "auth": {
+    "login": "लॉग इन",
+    "signup": "साइन अप",
+    "email": "ईमेल",
+    "password": "पासवर्ड",
+    "forgotPassword": "पासवर्ड भूल गए?"
+  },
+  "profile": {
+    "personalInfo": "व्यक्तिगत जानकारी",
+    "name": "नाम",
+    "phone": "फ़ोन नंबर",
+    "address": "पता",
+    "occupation": "व्यवसाय"
+  },
+  "validation": {
+    "required": "यह फ़ील्ड आवश्यक है",
+    "invalidEmail": "कृपया एक वैध ईमेल दर्ज करें",
+    "invalidPhone": "कृपया एक वैध फ़ोन नंबर दर्ज करें"
+  }
+}

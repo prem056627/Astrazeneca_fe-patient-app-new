@@ -1,0 +1,103 @@
+{
+  "expo": {
+    "name": "BMS PSP",
+    "slug": "bms-patient-app",
+    "version": "1.4.0",
+    "owner": "zelthy",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#BE2BBB"
+    },
+    "packagerOpts": {
+      "config": "metro.config.js",
+      "sourceExts": ["js", "jsx", "svg"]
+    },
+    "assetBundlePatterns": ["**/*", "**/*.svg"],
+    "ios": {
+      "supportsTablet": false,
+      "buildNumber": "1",
+      "icon": "./assets/appstore.png",
+      "infoPlist": {
+        "NSCameraUsageDescription": "$(PRODUCT_NAME) needs access to your Camera."
+      },
+      "bundleIdentifier": "com.bms.BMSPSP"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "permissions": ["CAMERA", "ACCESS_COARSE_LOCATION"],
+      "blockedPermissions": [
+				"ACCESS_MEDIA_LOCATION",
+				"READ_EXTERNAL_STORAGE",
+				"READ_MEDIA_IMAGES",
+				"READ_MEDIA_VIDEO",
+				"SYSTEM_ALERT_WINDOW",
+				"RECORD_AUDIO"
+			],
+      "versionCode": 17,
+      "package": "com.bms.BMSPSP",
+      "allowBackup": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "./plugins/withAndroidMainApplicationAttributes",
+        {
+          "android:usesCleartextTraffic": false
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "$(PRODUCT_NAME) needs access to your location to let share it during eKYC."
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "$(PRODUCT_NAME) needs access to your camera to let you scan vials"
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "compileSdkVersion": 34,
+            "targetSdkVersion": 34,
+            "buildToolsVersion": "34.0.0",
+            "usesCleartextTraffic": false,
+            "kotlinVersion": "1.6.20"
+          },
+          "ios": {}
+        }
+      ],
+      [
+        "expo-document-picker",
+        {
+          "iCloudContainerEnvironment": "Production"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "$(PRODUCT_NAME) needs access to your photos and camera to let you share it in form submission.",
+          "microphonePermission": false
+        }
+      ],
+      ["expo-localization"]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "007ee850-f5e2-4bfe-af1c-fda9d4bcc108"
+      }
+    }
+  }
+}

@@ -1,0 +1,57 @@
+/* Define keyframes for sliding in, staying, and sliding out */
+@keyframes slideInFromRight {
+	0% {
+		transform: translateX(100%);
+		opacity: 0;
+	}
+	100% {
+		transform: translateX(0);
+		opacity: 1;
+	}
+}
+
+@keyframes stayInPlace {
+	0% {
+		transform: translateX(0);
+		opacity: 1;
+	}
+	100% {
+		transform: translateX(0);
+		opacity: 1;
+	}
+}
+
+@keyframes slideOutToLeft {
+	0% {
+		transform: translateX(0);
+		opacity: 1;
+	}
+	100% {
+		transform: translateX(-100%);
+		opacity: 0;
+	}
+}
+
+/* Apply the animations */
+.custom-toast {
+	animation: slideInFromRight 0.5s ease-out, stayInPlace 4s 0.5s, slideOutToLeft 0.5s 4.5s ease-out;
+	border-radius: 8px;
+	position: fixed; 
+	top: 0px;
+	right: 0px; 
+	left: 0px; 
+	width: 100% !important;
+	max-width: 100% !important;
+}
+
+/* Custom styles for the icon */
+.custom-toast .react-hot-toast__icon {
+	font-size: 40px !important;
+}
+
+/* Custom styles for the content */
+.custom-toast .react-hot-toast__content {
+	font-family: 'Arial', sans-serif;
+	font-size: 16px;
+	color: #1EA41D; /* Ensuring the text color matches */
+}
