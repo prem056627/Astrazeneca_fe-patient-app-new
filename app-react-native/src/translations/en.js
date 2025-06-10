@@ -14,7 +14,7 @@
 		},
 		auth: {
 			loginAsHcp: 'Log In as HCP',
-			loginAsPatient: 'Log In as Patient',
+			loginAsPatient: 'Login/Sign up',
 			signup: 'Sign Up',
 			email: 'Email',
 			password: 'Password',

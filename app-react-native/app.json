@@ -12,10 +12,7 @@
       "resizeMode": "contain",
       "backgroundColor": "#BE2BBB"
     },
-    "packagerOpts": {
-      "config": "metro.config.js",
-      "sourceExts": ["js", "jsx", "svg"]
-    },
+
     "assetBundlePatterns": ["**/*", "**/*.svg"],
     "ios": {
       "supportsTablet": false,
@@ -48,6 +45,7 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
+      "expo-secure-store",
       [
         "./plugins/withAndroidMainApplicationAttributes",
         {

@@ -1,0 +1,10 @@
+--- xcodebuild: WARNING: Using the first of multiple matching destinations:
+{ platform:iOS Simulator, arch:arm64, id:BD1B4F34-7352-4CB6-B9AD-7379F9D59AED, OS:17.5, name:iPhone 15 Pro }
+{ platform:iOS Simulator, arch:x86_64, id:BD1B4F34-7352-4CB6-B9AD-7379F9D59AED, OS:17.5, name:iPhone 15 Pro }
+** BUILD FAILED **
+
+
+The following build commands failed:
+	PhaseScriptExecution [CP]\ Embed\ Pods\ Frameworks /Users/zelthy/Library/Developer/Xcode/DerivedData/BMSPSP-droipicuplctficnvfndbwzmxayx/Build/Intermediates.noindex/BMSPSP.build/Debug-iphonesimulator/BMSPSP.build/Script-6D5A27EE1BFD616FB091F490.sh (in target 'BMSPSP' from project 'BMSPSP')
+	Building workspace BMSPSP with scheme BMSPSP and configuration Debug
+(2 failures)
