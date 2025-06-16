@@ -106,7 +106,7 @@ export default function CommonLoginPage({ route, navigation }) {
 							onPress={() => onLogin('patient')}
 						>
 							{loading ? (
-								<ActivityIndicator size={'small'} color="#BE2BBB" />
+								<ActivityIndicator size={'small'} color="#7C084B" />
 							) : (
 								<View style={{ position: 'relative', width: '100%' }}>
 									<Text style={styles.primaryButtonLabel}>

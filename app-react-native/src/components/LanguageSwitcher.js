@@ -79,12 +79,12 @@ const styles = StyleSheet.create({
 		borderRadius: 20,
 		backgroundColor: '#fff',
 		borderWidth: 1,
-		borderColor: '#BE2BBB',
+		borderColor: '#7C084B',
 		minWidth: 100,
 		alignItems: 'center',
 	},
 	activeButton: {
-		backgroundColor: '#BE2BBB',
+		backgroundColor: '#7C084B',
 	},
 	buttonText: {
 		fontSize: 16,

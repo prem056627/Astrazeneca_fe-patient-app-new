@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "BMS PSP",
-    "slug": "bms-patient-app",
+    "name": "AstraZeneca",
+    "slug": "AZ-patient-app",
     "version": "1.4.0",
     "owner": "zelthy",
     "orientation": "portrait",
@@ -10,7 +10,7 @@
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#BE2BBB"
+      "backgroundColor": "#7C084B"
     },
 
     "assetBundlePatterns": ["**/*", "**/*.svg"],
@@ -21,7 +21,7 @@
       "infoPlist": {
         "NSCameraUsageDescription": "$(PRODUCT_NAME) needs access to your Camera."
       },
-      "bundleIdentifier": "com.bms.BMSPSP"
+      "bundleIdentifier": "com.astrazeneca.AZPSP"
     },
     "android": {
       "adaptiveIcon": {
@@ -38,7 +38,7 @@
 				"RECORD_AUDIO"
 			],
       "versionCode": 17,
-      "package": "com.bms.BMSPSP",
+      "package": "com.astrazeneca.AZPSP",
       "allowBackup": false
     },
     "web": {

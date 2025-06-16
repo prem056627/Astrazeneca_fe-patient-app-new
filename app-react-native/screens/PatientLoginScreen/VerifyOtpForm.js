@@ -49,6 +49,8 @@ const VerifyOtpForm = ({
 
   const dashboardDispatch = useDashboardDispatch();
 
+  const isOtpComplete = otp.join("").length === 6 && otp.every(digit => digit !== "");
+
   const onChangeCode = (text, index, setFieldValue) => {
     if (text.length > 1) {
       setErrorMessages(undefined);
@@ -219,122 +221,124 @@ const VerifyOtpForm = ({
     backgroundColor: "#fff",
     textColor: "#000",
     errorColor: "#dc2626",
-    focusColor: "#BE2BBB",
+    focusColor: "#7C084B",
   };
 
   return (
-		<Formik
-			initialValues={{ otp: '' }}
-			validationSchema={validationSchema}
-			onSubmit={onSubmit}
-			validateOnChange={false}
-			validateOnBlur={false}
-		>
-			{({
-				setFieldValue,
-				handleChange,
-				handleBlur,
-				handleSubmit,
-				values,
-				errors,
-			}) => (
-				<View style={styles.forms}>
-					<View style={styles.formsInfo}>
-						<Text style={{ fontSize: 20, color: '#000000', fontWeight: 700 }}>
-							{t('auth.verifyOtp.title')}
-						</Text>
-						<View style={styles.formOtpInfoBox}>
-							<Text style={styles.formOtpInfoLabel}>
-								{t('auth.verifyOtp.enterOtp')}
-								<Text style={{ fontWeight: 700 }}> +91 {mobileNumber}</Text>
-							</Text>
-							<Pressable>
-								<Text
-									style={{ fontSize: 14, color: '#BE2BBB', fontWeight: 700 }}
-									onPress={handleEdit}
-								>
-									{t('auth.verifyOtp.edit')}
-								</Text>
-							</Pressable>
-						</View>
-					</View>
-					<View style={styles.formsContent}>
-						<View style={{ gap: 24 }}>
-							<OTPInput
-								codes={otp}
-								errorMessages={errors.otp}
-								onChangeCode={(text, index) =>
-									onChangeCode(text, index, setFieldValue)
-								}
-								refs={refs}
-								config={otpConfig}
-								name="otp"
-							/>
-							{errors.otp && (
-								<Text style={{ fontSize: 14, color: '#B81111' }}>
-									{errors.otp}
-								</Text>
-							)}
+    <Formik
+      initialValues={{ otp: "" }}
+      validationSchema={validationSchema}
+      onSubmit={onSubmit}
+      validateOnChange={false}
+      validateOnBlur={false}
+    >
+      {({
+        setFieldValue,
+        handleChange,
+        handleBlur,
+        handleSubmit,
+        values,
+        errors,
+      }) => (
+        <View style={styles.forms}>
+          <View style={styles.formsInfo}>
+            <Text style={{ fontSize: 20, color: "#000000", fontWeight: 700 }}>
+              {t("auth.verifyOtp.title")}
+            </Text>
+            <View style={styles.formOtpInfoBox}>
+              <Text style={styles.formOtpInfoLabel}>
+                {t("auth.verifyOtp.enterOtp")}
+                <Text style={{ fontWeight: 700 }}> +91 {mobileNumber}</Text>
+              </Text>
+              <Pressable>
+                <Text
+                  style={{ fontSize: 14, color: "#7C084B", fontWeight: 700 }}
+                  onPress={handleEdit}
+                >
+                  {t("auth.verifyOtp.edit")}
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+          <View style={styles.formsContent}>
+            <View style={{ gap: 24 }}>
+              <OTPInput
+                codes={otp}
+                errorMessages={errors.otp}
+                onChangeCode={(text, index) =>
+                  onChangeCode(text, index, setFieldValue)
+                }
+                refs={refs}
+                config={otpConfig}
+                name="otp"
+              />
+              {errors.otp && (
+                <Text style={{ fontSize: 14, color: "#B81111" }}>
+                  {errors.otp}
+                </Text>
+              )}
 
-							{!isCorrectOTP && (
-								<Text style={styles.userNotExist}>
-									{t('auth.verifyOtp.incorrectOtp')}
-								</Text>
-							)}
+              {!isCorrectOTP && (
+                <Text style={styles.userNotExist}>
+                  {t("auth.verifyOtp.incorrectOtp")}
+                </Text>
+              )}
 
-							{resendOtpSuccess && (
-								<Text style={styles.formOtpInfoLabel}>
-									{t('auth.verifyOtp.otpSentSuccess')}
-									<Text style={styles.formOtpMobile}> {mobileNumber}</Text>
-								</Text>
-							)}
+              {resendOtpSuccess && (
+                <Text style={styles.formOtpInfoLabel}>
+                  {t("auth.verifyOtp.otpSentSuccess")}
+                  <Text style={styles.formOtpMobile}> {mobileNumber}</Text>
+                </Text>
+              )}
 
-							{counter === 0 ? (
-								<TouchableOpacity onPress={handleResendOtp}>
-									<Text
-										style={{ fontWeight: 700, fontSize: 14, color: '#BE2BBB' }}
-									>
-										{t('auth.verifyOtp.resendOtp')}
-									</Text>
-								</TouchableOpacity>
-							) : (
-								<Text>
-									{t('auth.verifyOtp.resendIn')} {counter} {t('auth.verifyOtp.seconds')}
-								</Text>
-							)}
-						</View>
-						<View style={styles.formSubmitBox}>
-							{patientLoginData?.isSignupUser && (
-								<Text style={styles.formMoreInfo}>
-									{t('auth.verifyOtp.aadharNote')}
-								</Text>
-							)}
-							<TouchableOpacity
-								style={
-									otp.length < 6
-										? styles.formSubmitButtonDisabled
-										: styles.formSubmitButton
-								}
-								onPress={handleSubmit}
-								disabled={otp.length < 6}
-							>
-								{loading ? (
-									<ActivityIndicator size={'large'} color="#ffffff" />
-								) : (
-									<Text
-										style={{ color: '#ffffff', fontSize: 16, fontWeight: 700 }}
-									>
-										{patientLoginData?.isSignupUser
-											? t('auth.verifyOtp.verifyAndProceed')
-											: t('auth.verifyOtp.login')}
-									</Text>
-								)}
-							</TouchableOpacity>
-						</View>
-					</View>
-				</View>
-			)}
-		</Formik>
-	);
+              {counter === 0 ? (
+                <TouchableOpacity onPress={handleResendOtp}>
+                  <Text
+                    style={{ fontWeight: 700, fontSize: 14, color: "#7C084B" }}
+                  >
+                    {t("auth.verifyOtp.resendOtp")}
+                  </Text>
+                </TouchableOpacity>
+              ) : (
+                <Text>
+                  {t("auth.verifyOtp.resendIn")} {counter}{" "}
+                  {t("auth.verifyOtp.seconds")}
+                </Text>
+              )}
+            </View>
+            <View style={styles.formSubmitBox}>
+              {patientLoginData?.isSignupUser && (
+                <Text style={styles.formMoreInfo}>
+                  {t("auth.verifyOtp.aadharNote")}
+                </Text>
+              )}
+              <TouchableOpacity
+                style={[
+                  !isOtpComplete || loading
+                    ? styles.formSubmitButtonDisabled
+                    : styles.formSubmitButton,
+                  { opacity: !isOtpComplete || loading ? 0.5 : 1 },
+                ]}
+                onPress={handleSubmit}
+                disabled={!isOtpComplete || loading}
+              >
+                {loading ? (
+                  <ActivityIndicator size={"large"} color="#ffffff" />
+                ) : (
+                  <Text
+                    style={{ color: "#ffffff", fontSize: 16, fontWeight: 700 }}
+                  >
+                    {patientLoginData?.isSignupUser
+                      ? t("auth.verifyOtp.verifyAndProceed")
+                      : t("auth.verifyOtp.login")}
+                  </Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      )}
+    </Formik>
+  );
 };
 export default VerifyOtpForm;

@@ -111,7 +111,7 @@ export default function PermissionsScreen({ route, navigation }) {
           padding: 16,
           fontSize: 16,
           fontWeight: 700,
-          color: "#BE2BBB",
+          color: "#7C084B",
         }}
       >
         Privacy Policy
@@ -146,7 +146,7 @@ const styles = StyleSheet.create({
   },
   formSubmitButton: {
     padding: 14,
-    backgroundColor: "#BE2BBB",
+    backgroundColor: "#7C084B",
     alignItems: "center",
   },
   formSubmitButtonLabel: {

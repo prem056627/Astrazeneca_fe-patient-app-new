@@ -5,13 +5,13 @@ export const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     padding: 0,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "white",
   },
   nav: {
     alignItems: "center",
-    padding: 16,
-    paddingTop: 52,
-    paddingBottom: 16,
+    // padding: 16,
+    // paddingTop: 52,
+    // paddingBottom: 16,
   },
   brandLogo: {
     flex: 1,
@@ -31,9 +31,12 @@ export const styles = StyleSheet.create({
   forms: {
     flex: 1,
     gap: 24,
+  
   },
   formsInfo: {
     gap: 4,
+    // marginTop: 58,
+      // backgroundColor:'red'
   },
   formInfoLabel: {
     fontSize: 20,
@@ -68,7 +71,7 @@ export const styles = StyleSheet.create({
   },
   editButton: {
     fontSize: 14,
-    color: "#BE2BBB",
+    color: "#7C084B",
     fontWeight: 700,
   },
   eachField: {
@@ -101,13 +104,13 @@ export const styles = StyleSheet.create({
   },
   formSubmitButton: {
     padding: 14,
-    backgroundColor: "#BE2BBB",
+    backgroundColor: "#7C084B",
     alignItems: "center",
-    borderRadius: 6
+    borderRadius: 61112234
   },
   formSubmitButtonDisabled: {
     padding: 14,
-    backgroundColor: "#BE2BBB80",
+    backgroundColor: "#9A9A9A",
     alignItems: "center",
     borderRadius: 6
   },
@@ -119,7 +122,7 @@ export const styles = StyleSheet.create({
   formResendOtpLabel: {
     fontWeight: 700,
     fontSize: 14,
-    color: "#BE2BBB",
+    color: "#7C084B",
   },
   checkbox: {
     flexDirection: "row",
@@ -143,20 +146,20 @@ export const styles = StyleSheet.create({
     marginTop: 4,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#BE2BBB",
+    backgroundColor: "#7C084B",
     borderWidth: 2,
-    borderColor: "#BE2BBB",
+    borderColor: "#7C084B",
     alignItems: "center",
     width: 20,
     height: 20,
   },
   themeText: {
-    fontWeight: 700,
-    color: "#BE2BBB",
+    fontWeight: 600,
+    color: "#7C084B",
   },
   userNotExist: {
-    backgroundColor: "#BE2BBB29",
-    color: "#BE2BBB",
+    backgroundColor: "#7C084B29",
+    color: "#7C084B",
     padding: 12
   },
 });

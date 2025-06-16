@@ -10,7 +10,7 @@ const initialDashboardState = {
     termAndConditions: false,
     isUserExist: true,
   },
-  curr_role_id: 403,
+  curr_role_id: 375,
   authData: {},
 };
 

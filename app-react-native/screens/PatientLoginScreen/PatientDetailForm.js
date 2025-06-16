@@ -70,7 +70,7 @@ const PatientDetailForm = ({
             <View style={styles.eachField}>
               <View style={styles.formsMobileField}>
                 <TextInput
-                  selectionColor={"#BE2BBB"}
+                  selectionColor={"#7C084B"}
                   style={styles.formsInputField}
                   onChangeText={handleChange("name")}
                   onBlur={handleBlur("name")}

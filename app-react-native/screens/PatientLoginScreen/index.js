@@ -3,7 +3,7 @@ import { useIsFocused } from '@react-navigation/native';
 import React, { useEffect, useState } from 'react';
 import { TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import BrandLogo from '../../assets/bms_brand_logo.svg';
+import BrandLogo from '../../assets/AZ_logo.svg';
 import {
 	useDashboard,
 	useDashboardDispatch,
@@ -48,7 +48,7 @@ const PatientLoginScreen = ({ route, navigation }) => {
 
 
 	return (
-		<SafeAreaView style={{ flex: 1, backgroundColor: '#F6F6F6' }}>
+		<SafeAreaView style={{ flex: 1, backgroundColor: 'white' }}>
 			<View style={styles.container}>
 				{patientLoginData?.currentStep !== 'consent' ? (
 					<View style={styles.nav}>
