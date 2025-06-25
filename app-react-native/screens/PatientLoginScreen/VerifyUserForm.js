@@ -43,7 +43,7 @@ const VerifyUserForm = ({
   const validationSchema = yup.object().shape({
     mobile: yup
       .string()
-      .matches(phoneRegExp, t('auth.mobileNumber.validation.invalid'))
+      // .matches(phoneRegExp, t('auth.mobileNumber.validation.invalid'))
       .min(10, t('auth.mobileNumber.validation.minLength'))
       .max(10, t('auth.mobileNumber.validation.maxLength'))
       .required(t('auth.mobileNumber.validation.required')),
@@ -78,12 +78,15 @@ const VerifyUserForm = ({
     }
   };
 
-  // Handle fetch_auth_token step
-  const handleFetchAuthToken = async (requestId, mobile) => {
+  // Fixed: Handle fetch_auth_token step with proper role ID
+  const handleFetchAuthToken = async (requestId, mobile, roleId = null) => {
     console.log("🔐 Starting fetch_auth_token process...");
     
     try {
-      const ROLE_ID = await AsyncStorage.getItem("curr_role_id") || "375";
+      // Use the provided roleId, or get from AsyncStorage as fallback
+      const ROLE_ID = roleId || await AsyncStorage.getItem("curr_role_id") ;
+      console.log("👤 Using ROLE_ID for auth token:", ROLE_ID);
+      
       const postData = {
         step: "fetch_auth_token",
         request_id: requestId,
@@ -117,9 +120,9 @@ const VerifyUserForm = ({
           },
         });
 
-        // Navigate to webview or next screen
-        console.log("🌐 Ready to navigate to webview");
-        // navigation.navigate("WebView"); // Uncomment when ready
+        // Navigate to webview
+        console.log("🌐 Navigating to webview");
+        navigation.navigate("WebView");
         
       } else {
         console.log("❌ Failed to get auth token:", data.message);
@@ -131,11 +134,14 @@ const VerifyUserForm = ({
     }
   };
 
-  // Signup flow
+  // Fixed: Signup flow with consistent role ID usage
   const handleSignupFlow = async (values) => {
     console.log("📝 Starting SIGNUP flow...");
     
     try {
+      const SIGNUP_ROLE_ID = "403"; // Consistent role ID for signup
+      console.log("👤 Using SIGNUP_ROLE_ID:", SIGNUP_ROLE_ID);
+      
       // Step 1: signup_username
       let postData = {
         step: "signup_username",
@@ -144,7 +150,7 @@ const VerifyUserForm = ({
       };
 
       const step1Data = await makeAPICall(
-        `${API_URL}/v2/login/403/`,
+        `${API_URL}/v2/login/${SIGNUP_ROLE_ID}/`,
         postData,
         "signup_username"
       );
@@ -158,7 +164,7 @@ const VerifyUserForm = ({
       };
 
       const step2Data = await makeAPICall(
-        `${API_URL}/v2/login/403/`,
+        `${API_URL}/v2/login/${SIGNUP_ROLE_ID}/`,
         consentPostData,
         "submit_consent"
       );
@@ -175,7 +181,7 @@ const VerifyUserForm = ({
         };
 
         const step3Data = await makeAPICall(
-          `${API_URL}/v2/login/403/`,
+          `${API_URL}/v2/login/${SIGNUP_ROLE_ID}/`,
           sendOtpPostdata,
           "send_signup_otp"
         );
@@ -192,9 +198,10 @@ const VerifyUserForm = ({
           });
         }
       }
-       else if (step2Data.next === "fetch_auth_token") {
+      else if (step2Data.next === "fetch_auth_token") {
         console.log("🔐 Signup complete, fetching auth token...");
-        await handleFetchAuthToken(patientLoginData.request_id, values.mobile);
+        // Pass the same role ID used in signup flow
+        await handleFetchAuthToken(patientLoginData.request_id, values.mobile, SIGNUP_ROLE_ID);
       }
 
     } catch (error) {
@@ -203,12 +210,12 @@ const VerifyUserForm = ({
     }
   };
 
-  // Login flow
+  // Modified handleLoginFlow to return a flag indicating if signup is needed
   const handleLoginFlow = async (values) => {
     console.log("🔑 Starting LOGIN flow...");
     
     try {
-      const ROLE_ID = await AsyncStorage.getItem("curr_role_id");
+      const ROLE_ID = await AsyncStorage.getItem("curr_role_id") ;
       console.log("👤 Using ROLE_ID:", ROLE_ID);
       
       // Step 1: verify_username
@@ -252,22 +259,26 @@ const VerifyUserForm = ({
             },
           });
         }
+        return { success: true, needsSignup: false };
       } else if (step1Data.next === "fetch_auth_token") {
         console.log("🔐 User verified, fetching auth token directly...");
-        await handleFetchAuthToken(patientLoginData.request_id, values.mobile);
+        await handleFetchAuthToken(patientLoginData.request_id, values.mobile, ROLE_ID);
+        return { success: true, needsSignup: false };
       } else if (!step1Data.success) {
-        console.log("❌ User doesn't exist, switching to signup flow");
+        console.log("❌ User doesn't exist, needs signup flow");
         setIsUserExist(false);
         setIsSignupUser(true);
-        setErrortext(step1Data.message || "User not found. Please sign up.");
+        return { success: true, needsSignup: true };
       }
 
     } catch (error) {
       console.error("❌ Login flow error:", error);
       setErrortext("Login failed. Please try again.");
+      return { success: false, needsSignup: false };
     }
   };
 
+  // Updated onSubmit function
   async function onSubmit(values) {
     console.log("🎯 Form submitted with values:", values);
     console.log("📱 Current state - isUserExist:", isUserExist, "isSignupUser:", isSignupUser);
@@ -280,9 +291,23 @@ const VerifyUserForm = ({
 
     try {
       if (!isUserExist && isSignupUser) {
+        // Direct signup flow
+        console.log("🆕 Proceeding with signup flow for known new user");
         await handleSignupFlow(values);
       } else {
-        await handleLoginFlow(values);
+        // Try login flow first
+        console.log("🔑 Attempting login flow...");
+        const loginResult = await handleLoginFlow(values);
+        
+        if (loginResult.success && loginResult.needsSignup) {
+          // User doesn't exist, automatically proceed with signup
+          console.log("🔄 Automatically switching to signup flow for new user");
+          await handleSignupFlow(values);
+        } else if (!loginResult.success) {
+          // Login flow failed
+          setErrortext("Login failed. Please try again.");
+        }
+        // If loginResult.success && !loginResult.needsSignup, login was successful
       }
     } catch (error) {
       console.error("❌ Overall submission error:", error);
@@ -291,6 +316,7 @@ const VerifyUserForm = ({
       setLoading(false);
     }
   }
+
 
   return (
     <Formik
