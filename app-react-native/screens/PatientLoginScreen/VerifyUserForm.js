@@ -16,7 +16,6 @@ import {
 } from "../../context/DashboardContextProvider";
 import { getApiUrl, getBaseUrl, getUserRoleId } from "../../utils/helper";
 import { styles } from "./styles";
-// import CookieManager from "@react-native-cookies/cookies";
 import Checkbox from "expo-checkbox";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from 'react-i18next';
@@ -32,9 +31,8 @@ const VerifyUserForm = ({
   const [errorText, setErrortext] = useState("");
   const [loading, setLoading] = useState(false);
   const API_URL = getApiUrl();
-  const BASE_URL = getBaseUrl()
-  // const ROLE_ID = getUserRoleId()
-  const [isSignupUser, setIsSignupUser] = useState(false)
+  const BASE_URL = getBaseUrl();
+  const [isSignupUser, setIsSignupUser] = useState(false);
 
   const { patientLoginData } = useDashboard();
   const dashboardDispatch = useDashboardDispatch();
@@ -55,176 +53,243 @@ const VerifyUserForm = ({
       .required(t('auth.termsAndConditions.validation')),
   });
 
-  const handlePatientData = (request_id, mobile, currentStep) => {
-    setMobileNumber(mobile);
-    dashboardDispatch({
-      type: "SET_PATIENT_LOGIN_DATA",
-      payload: {
-        request_id: request_id,
-        mobile: mobile,
-        currentStep: currentStep,
-      },
-    });
+  // Enhanced API call function with better error handling
+  const makeAPICall = async (url, postData, stepName) => {
+    console.log(`🚀 [${stepName}] Making API call to:`, url);
+    console.log(`📤 [${stepName}] Request payload:`, JSON.stringify(postData, null, 2));
+    
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        body: JSON.stringify(postData),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      
+      console.log(`📡 [${stepName}] Response status:`, response.status);
+      const data = await response.json();
+      console.log(`📥 [${stepName}] Response data:`, JSON.stringify(data, null, 2));
+      
+      return data;
+    } catch (error) {
+      console.error(`❌ [${stepName}] API call failed:`, error);
+      throw error;
+    }
+  };
+
+  // Handle fetch_auth_token step
+  const handleFetchAuthToken = async (requestId, mobile) => {
+    console.log("🔐 Starting fetch_auth_token process...");
+    
+    try {
+      const ROLE_ID = await AsyncStorage.getItem("curr_role_id") || "375";
+      const postData = {
+        step: "fetch_auth_token",
+        request_id: requestId,
+        username: "+91" + mobile,
+      };
+
+      const data = await makeAPICall(
+        `${API_URL}/v2/login/${ROLE_ID}/`,
+        postData,
+        "fetch_auth_token"
+      );
+
+      if (data.success && data.access_token) {
+        console.log("✅ Auth token received successfully!");
+        console.log("🎫 Access Token:", data.access_token);
+        console.log("🔄 Refresh Token:", data.refresh_token);
+        console.log("⏰ Expires in:", data.expires_in);
+        
+        // Store tokens
+        await AsyncStorage.setItem("access_token", data.access_token);
+        await AsyncStorage.setItem("refresh_token", data.refresh_token);
+        
+        // Update dashboard state
+        dashboardDispatch({
+          type: "SET_PATIENT_LOGIN_DATA",
+          payload: {
+            ...patientLoginData,
+            currentStep: "webview", // or "done" based on your flow
+            accessToken: data.access_token,
+            refreshToken: data.refresh_token,
+          },
+        });
+
+        // Navigate to webview or next screen
+        console.log("🌐 Ready to navigate to webview");
+        // navigation.navigate("WebView"); // Uncomment when ready
+        
+      } else {
+        console.log("❌ Failed to get auth token:", data.message);
+        setErrortext(data.message || "Failed to authenticate");
+      }
+    } catch (error) {
+      console.error("❌ Error in handleFetchAuthToken:", error);
+      setErrortext("Authentication failed. Please try again.");
+    }
+  };
+
+  // Signup flow
+  const handleSignupFlow = async (values) => {
+    console.log("📝 Starting SIGNUP flow...");
+    
+    try {
+      // Step 1: signup_username
+      let postData = {
+        step: "signup_username",
+        request_id: patientLoginData.request_id,
+        username: "+91" + values.mobile,
+      };
+
+      const step1Data = await makeAPICall(
+        `${API_URL}/v2/login/403/`,
+        postData,
+        "signup_username"
+      );
+
+      // Step 2: submit_consent
+      let consentPostData = {
+        step: "submit_consent",
+        request_id: patientLoginData.request_id,
+        username: "+91" + values.mobile,
+        consent_text: "",
+      };
+
+      const step2Data = await makeAPICall(
+        `${API_URL}/v2/login/403/`,
+        consentPostData,
+        "submit_consent"
+      );
+
+      // Step 3: Handle next step based on response
+      if (step2Data.next === "send_signup_otp") {
+        console.log("📨 Proceeding to send signup OTP...");
+        
+        let sendOtpPostdata = {
+          step: "send_signup_otp",
+          request_id: patientLoginData.request_id,
+          username: "+91" + values.mobile,
+          consent_text: "",
+        };
+
+        const step3Data = await makeAPICall(
+          `${API_URL}/v2/login/403/`,
+          sendOtpPostdata,
+          "send_signup_otp"
+        );
+
+        if (step3Data.next === "verify_signup_otp") {
+          console.log("✅ OTP sent successfully, moving to verify OTP step");
+          dashboardDispatch({
+            type: "SET_PATIENT_LOGIN_DATA",
+            payload: {
+              ...patientLoginData,
+              currentStep: "verify_otp",
+              isSignup: true,
+            },
+          });
+        }
+      }
+       else if (step2Data.next === "fetch_auth_token") {
+        console.log("🔐 Signup complete, fetching auth token...");
+        await handleFetchAuthToken(patientLoginData.request_id, values.mobile);
+      }
+
+    } catch (error) {
+      console.error("❌ Signup flow error:", error);
+      setErrortext("Signup failed. Please try again.");
+    }
+  };
+
+  // Login flow
+  const handleLoginFlow = async (values) => {
+    console.log("🔑 Starting LOGIN flow...");
+    
+    try {
+      const ROLE_ID = await AsyncStorage.getItem("curr_role_id");
+      console.log("👤 Using ROLE_ID:", ROLE_ID);
+      
+      // Step 1: verify_username
+      let postData = {
+        step: "verify_username",
+        request_id: patientLoginData.request_id,
+        username: "+91" + values.mobile,
+      };
+
+      const step1Data = await makeAPICall(
+        `${API_URL}/v2/login/${ROLE_ID}/`,
+        postData,
+        "verify_username"
+      );
+
+      if (step1Data.next === "send_login_otp") {
+        console.log("📨 User exists, sending login OTP...");
+        setIsUserExist(true);
+
+        // Step 2: send_login_otp
+        let sendOTPPostData = {
+          step: "send_login_otp",
+          request_id: patientLoginData.request_id,
+          username: "+91" + values.mobile,
+        };
+
+        const step2Data = await makeAPICall(
+          `${API_URL}/v2/login/${ROLE_ID}/`,
+          sendOTPPostData,
+          "send_login_otp"
+        );
+
+        if (step2Data.next === "verify_login_otp") {
+          console.log("✅ OTP sent successfully, moving to verify OTP step");
+          dashboardDispatch({
+            type: "SET_PATIENT_LOGIN_DATA",
+            payload: {
+              ...patientLoginData,
+              currentStep: "verify_otp",
+              isSignup: false,
+            },
+          });
+        }
+      } else if (step1Data.next === "fetch_auth_token") {
+        console.log("🔐 User verified, fetching auth token directly...");
+        await handleFetchAuthToken(patientLoginData.request_id, values.mobile);
+      } else if (!step1Data.success) {
+        console.log("❌ User doesn't exist, switching to signup flow");
+        setIsUserExist(false);
+        setIsSignupUser(true);
+        setErrortext(step1Data.message || "User not found. Please sign up.");
+      }
+
+    } catch (error) {
+      console.error("❌ Login flow error:", error);
+      setErrortext("Login failed. Please try again.");
+    }
   };
 
   async function onSubmit(values) {
-    console.log(
-      "mobile data",
-      values,
-      patientLoginData.request_id,
-      isUserExist,
-      API_URL
-    );
+    console.log("🎯 Form submitted with values:", values);
+    console.log("📱 Current state - isUserExist:", isUserExist, "isSignupUser:", isSignupUser);
+    console.log("🔗 API_URL:", API_URL);
+    console.log("📋 Patient Login Data:", patientLoginData);
 
     setLoading(true);
+    setErrortext("");
     setMobileNumber(values.mobile);
 
-    // if (!isUserExist && isSignupUser) {
-    //   let postData = {
-    //     step: "signup_username",
-    //     request_id: patientLoginData.request_id,
-    //     username: "+91" + values.mobile,
-    //   };
-
-    //   // console.log("postData", postData);
-    //   await fetch(`${API_URL}/v2/login/403/`, {
-    //     method: "POST",
-    //     body: JSON.stringify(postData),
-    //     headers: {
-    //       "Content-Type": "application/json",
-    //     },
-    //   })
-    //     .then((response) => {
-    //       return response.json();
-    //     })
-    //     .then(async (data) => {
-    //       console.log("step 2 --->> signup_username =>>>>>>>>>", data);
-
-    //       let consentPostData = {
-    //         step: "submit_consent",
-    //         request_id: patientLoginData.request_id,
-    //         username: "+91" + values.mobile,
-    //         consent_text: "",
-    //       };
-
-    //       await fetch(`${API_URL}/v2/login/403/`, {
-    //         method: "POST",
-    //         body: JSON.stringify(consentPostData),
-    //         headers: {
-    //           "Content-Type": "application/json",
-    //         },
-    //       })
-    //         .then((response) => {
-    //           return response.json();
-    //         })
-    //         .then(async (data) => {
-    //           console.log("step 3 --->> submit_consent =>>>>>>>>>", data);
-    //           setLoading(false);
-    //           if (data.next === "send_signup_otp") {
-    //             let sendOtpPostdata = {
-    //               step: "send_signup_otp",
-    //               request_id: patientLoginData.request_id,
-    //               username: "+91" + values.mobile,
-    //               consent_text: "",
-    //             };
-
-    //             await fetch(`${API_URL}/v2/login/403/`, {
-    //               method: "POST",
-    //               body: JSON.stringify(sendOtpPostdata),
-    //               headers: {
-    //                 "Content-Type": "application/json",
-    //               },
-    //             })
-    //               .then((response) => {
-    //                 return response.json();
-    //               })
-    //               .then((data) => {
-    //                 console.log("step 4 --->> get otp =>>>", data);
-    //                 dashboardDispatch({
-    //                   type: "SET_PATIENT_LOGIN_DATA",
-    //                   payload: {
-    //                     ...patientLoginData,
-    //                     currentStep: "verify_otp",
-    //                   },
-    //                 });
-    //               });
-    //           }
-    //         });
-
-    //       if (data.next === "verify_login_otp") {
-    //         dashboardDispatch({
-    //           type: "SET_PATIENT_LOGIN_DATA",
-    //           payload: {
-    //             ...patientLoginData,
-    //             currentStep: "verify_otp",
-    //           },
-    //         });
-    //       }
-    //     });
-    // } else {
-    let ROLE_ID = await AsyncStorage.getItem("curr_role_id");
-    let postData = {
-      step: "verify_username",
-      request_id: patientLoginData.request_id,
-      username: "+91" + values.mobile,
-    };
-
-    fetch(`${API_URL}/v2/login/${ROLE_ID}/`, {
-      method: "POST",
-      body: JSON.stringify(postData),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    })
-      .then((response) => {
-        return response.json();
-      })
-      .then(async (data) => {
-        console.log("step 1 --->> verify_username =>>>>>>>>>", data);
-        if (data.next === "send_login_otp") {
-          setIsUserExist(true);
-
-          let sendOTPPostData = {
-            step: "send_login_otp",
-            request_id: patientLoginData.request_id,
-            username: "+91" + values.mobile,
-          };
-
-          await fetch(`${API_URL}/v2/login/${ROLE_ID}/`, {
-            method: "POST",
-            body: JSON.stringify(sendOTPPostData),
-            headers: {
-              "Content-Type": "application/json",
-            },
-          })
-            .then((response) => {
-              return response.json();
-            })
-            .then((data) => {
-              console.log("send_login_otp =>>>>>>>>>", data);
-              if (data.next === "verify_login_otp") {
-                dashboardDispatch({
-                  type: "SET_PATIENT_LOGIN_DATA",
-                  payload: {
-                    ...patientLoginData,
-                    currentStep: "verify_otp",
-                  },
-                });
-              }
-              setLoading(false);
-            });
-        } else if (!data.success) {
-          setIsUserExist(false);
-          setIsSignupUser(true);
-          setLoading(false);
-          setErrortext(data.message);
-        }
-      })
-      .catch((error) => {
-        setLoading(false);
-
-        console.error(error);
-      });
+    try {
+      if (!isUserExist && isSignupUser) {
+        await handleSignupFlow(values);
+      } else {
+        await handleLoginFlow(values);
+      }
+    } catch (error) {
+      console.error("❌ Overall submission error:", error);
+      setErrortext("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -244,7 +309,7 @@ const VerifyUserForm = ({
         errors,
         isValid,
       }) => (
-        <SafeAreaView style={{ flex: 1 }}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
           <View style={styles.forms}>
             <View style={styles.formsInfo}>
               <Text style={{ fontSize: 20, color: '#000000', fontWeight: 700 }}>
@@ -261,9 +326,8 @@ const VerifyUserForm = ({
                     {t('auth.mobileNumber.countryCode')}
                   </Text>
                   <TextInput
-                    selectionColor={'#BE2BBB'}
+                    selectionColor={'#7C084B'}
                     style={styles.formsInputField}
-										// onChangeText={handleChange("mobile")}
                     onChangeText={(value) => {
                       if (value === '') {
                         setFieldValue('mobile', value);
@@ -283,10 +347,11 @@ const VerifyUserForm = ({
                 </View>
                 <View
                   style={{
-                    gap: 8,
+                    gap: 14,
                     display: 'flex',
                     flexDirection: 'row',
                     alignItems: 'center',
+                    marginTop: 18,
                   }}
                 >
                   <Checkbox
@@ -295,17 +360,14 @@ const VerifyUserForm = ({
                       setFieldValue('termsAndConditions', value);
                     }}
                     style={styles.checkbox}
-                    color={values.termsAndConditions ? '#BE2BBB' : undefined}
+                    color={values.termsAndConditions ? '#7C084B' : undefined}
                   />
                   <Text style={styles.checkboxLabel}>
                     {t('auth.termsAndConditions.agree')}{' '}
                     <Text
                       style={[styles.themeText]}
                       onPress={() => {
-												Linking.openURL(
-													`${BASE_URL}/app-tnc/`
-													// '/app-tnc/'
-												);
+                        Linking.openURL(`${BASE_URL}/app-tnc/`);
                       }}
                     >
                       {t('auth.termsAndConditions.linkText')}
@@ -324,22 +386,30 @@ const VerifyUserForm = ({
                   <Text style={styles.userNotExist}>{errorText}</Text>
                 )}
               </View>
-              <TouchableOpacity
+             <TouchableOpacity
                 style={{
                   padding: 14,
-                  backgroundColor: '#BE2BBB',
-                  alignItems: 'center',
+                  backgroundColor: values.termsAndConditions
+                    ? "#7C084B"
+                    : "#9A9A9A",
+                  alignItems: "center",
                   borderRadius: 6,
+                  opacity: values.termsAndConditions ? 1 : 0.6,
                 }}
-                onPress={handleSubmit}
+                onPress={values.termsAndConditions ? handleSubmit : null}
+                disabled={!values.termsAndConditions}
               >
                 {loading ? (
-                  <ActivityIndicator size={'small'} color="#ffffff" />
+                  <ActivityIndicator size={"small"} color="#ffffff" />
                 ) : (
                   <Text
-                    style={{ color: '#ffffff', fontSize: 16, fontWeight: 700 }}
+                    style={{
+                      color: values.termsAndConditions ? "#ffffff" : "#ffffff",
+                      fontSize: 16,
+                      fontWeight: 700,
+                    }}
                   >
-                    {t('common.next')}
+                    {t("common.next")}
                   </Text>
                 )}
               </TouchableOpacity>
@@ -350,4 +420,5 @@ const VerifyUserForm = ({
     </Formik>
   );
 };
+
 export default VerifyUserForm;

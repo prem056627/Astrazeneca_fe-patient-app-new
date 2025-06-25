@@ -106,7 +106,7 @@ export const styles = StyleSheet.create({
     padding: 14,
     backgroundColor: "#7C084B",
     alignItems: "center",
-    borderRadius: 61112234
+    borderRadius: 6
   },
   formSubmitButtonDisabled: {
     padding: 14,

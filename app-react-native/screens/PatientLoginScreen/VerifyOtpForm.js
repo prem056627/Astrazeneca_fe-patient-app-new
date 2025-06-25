@@ -33,7 +33,6 @@ const VerifyOtpForm = ({
   const [resendOtpSuccess, setResendOtpSuccess] = React.useState(false);
   const [isCorrectOTP, setIsCorrectOTP] = useState(true)
   const API_URL = getApiUrl();
-  // const ROLE_ID = getUserRoleId();
   const [errorMessages, setErrorMessages] = useState();
   const [otp, setOtp] = useState(Array(6).fill(""));
   const refs = [
@@ -46,10 +45,87 @@ const VerifyOtpForm = ({
   ];
 
   const { patientLoginData } = useDashboard();
-
   const dashboardDispatch = useDashboardDispatch();
 
   const isOtpComplete = otp.join("").length === 6 && otp.every(digit => digit !== "");
+
+  // Enhanced API call function with better error handling (from VerifyUserForm)
+  const makeAPICall = async (url, postData, stepName) => {
+    console.log(`🚀 [${stepName}] Making API call to:`, url);
+    console.log(`📤 [${stepName}] Request payload:`, JSON.stringify(postData, null, 2));
+    
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        body: JSON.stringify(postData),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      
+      console.log(`📡 [${stepName}] Response status:`, response.status);
+      const data = await response.json();
+      console.log(`📥 [${stepName}] Response data:`, JSON.stringify(data, null, 2));
+      
+      return data;
+    } catch (error) {
+      console.error(`❌ [${stepName}] API call failed:`, error);
+      throw error;
+    }
+  };
+
+  // Handle fetch_auth_token step (from VerifyUserForm)
+  const handleFetchAuthToken = async (requestId, mobile) => {
+    console.log("🔐 Starting fetch_auth_token process...");
+    
+    try {
+      const ROLE_ID = await AsyncStorage.getItem("curr_role_id") || "375";
+      const postData = {
+        step: "fetch_auth_token",
+        request_id: requestId,
+        username: "+91" + mobile,
+      };
+
+      const data = await makeAPICall(
+        `${API_URL}/v2/login/${ROLE_ID}/`,
+        postData,
+        "fetch_auth_token"
+      );
+
+      if (data.success && data.access_token) {
+        console.log("✅ Auth token received successfully!");
+        console.log("🎫 Access Token:", data.access_token);
+        console.log("🔄 Refresh Token:", data.refresh_token);
+        console.log("⏰ Expires in:", data.expires_in);
+        
+        // Store tokens
+        await AsyncStorage.setItem("access_token", data.access_token);
+        await AsyncStorage.setItem("refresh_token", data.refresh_token);
+        
+        // Update dashboard state
+        dashboardDispatch({
+          type: "SET_PATIENT_LOGIN_DATA",
+          payload: {
+            ...patientLoginData,
+            currentStep: "webview",
+            accessToken: data.access_token,
+            refreshToken: data.refresh_token,
+          },
+        });
+
+        // Navigate to webview
+        console.log("🌐 Navigating to webview");
+        navigation.navigate("WebviewScreen");
+        
+      } else {
+        console.log("❌ Failed to get auth token:", data.message);
+        setErrorMessages(data.message || "Failed to authenticate");
+      }
+    } catch (error) {
+      console.error("❌ Error in handleFetchAuthToken:", error);
+      setErrorMessages("Authentication failed. Please try again.");
+    }
+  };
 
   const onChangeCode = (text, index, setFieldValue) => {
     if (text.length > 1) {
@@ -82,44 +158,50 @@ const VerifyOtpForm = ({
   };
 
   const handleResendOtp = async () => {
-
     let ROLE_ID = await AsyncStorage.getItem("curr_role_id");
 
+    // Enhanced resend logic for both login and signup
+    const stepName = isUserExist ? 'resend_login_otp' : 'resend_signup_otp';
     let postData = {
-			step: 'resend_login_otp',
-			request_id: patientLoginData?.request_id,
-		};
+      step: stepName,
+      request_id: patientLoginData?.request_id,
+    };
 
-     console.log('resend payload', postData);
+    // Add username for signup resend
+    if (!isUserExist) {
+      postData.username = "+91" + mobileNumber;
+    }
+
+    console.log('resend payload', postData);
     setLoading(true);
-    fetch(`${API_URL}/v2/login/${ROLE_ID}/`, {
-			method: 'POST',
-			body: JSON.stringify(postData),
-			headers: {
-				'Content-Type': 'application/json',
-			},
-		})
-			.then((response) => response.json())
-			.then((data) => {
-				setLoading(false);
-				if (data.success) {
-					setResendOtpSuccess(true);
-				}
+    
+    try {
+      const data = await makeAPICall(
+        `${API_URL}/v2/login/${ROLE_ID}/`,
+        postData,
+        stepName
+      );
 
-				console.log('resend otp', data);
-
-				setCounter(30);
-			})
-			.catch((error) => {
-				setLoading(false);
-				console.error(error);
-			});
+      if (data.success) {
+        setResendOtpSuccess(true);
+        console.log('✅ OTP resent successfully');
+      } else {
+        console.log('❌ Failed to resend OTP:', data.message);
+        setErrorMessages(data.message || 'Failed to resend OTP');
+      }
+      setCounter(30);
+    } catch (error) {
+      console.error('❌ Resend OTP error:', error);
+      setErrorMessages('Failed to resend OTP. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
     if (counter > 0) {
       const timer = setTimeout(() => setCounter(counter - 1), 1000);
-      return () => clearTimeout(timer); // Cleanup timer on unmount
+      return () => clearTimeout(timer);
     }
   }, [counter]);
 
@@ -133,13 +215,9 @@ const VerifyOtpForm = ({
 
   const storeCookies = async (setCookieHeader) => {
     try {
-      // Split the cookies by ", " since multiple cookies are separated this way
       const cookiesArray = setCookieHeader.split(", ");
-
-      // Initialize an object to store cookies
       const cookies = {};
 
-      // Extract the specific cookies we need
       cookiesArray.forEach((cookie) => {
         const [cookieName, cookieValue] = cookie.split(";")[0].split("=");
         if (cookieName === "csrftoken" || cookieName === "zelthycookie") {
@@ -147,7 +225,6 @@ const VerifyOtpForm = ({
         }
       });
 
-      // Store cookies in AsyncStorage
       await AsyncStorage.setItem("@csrftoken", cookies.csrftoken);
       await AsyncStorage.setItem("@zelthycookie", cookies.zelthycookie);
 
@@ -158,62 +235,71 @@ const VerifyOtpForm = ({
   };
 
   async function onSubmit(values) {
+    console.log("🎯 OTP Form submitted with values:", values);
+    console.log("📱 Current state - isUserExist:", isUserExist);
+    console.log("📱 Mobile number:", mobileNumber);
+
     Keyboard.dismiss();
     setLoading(true);
+    setErrorMessages(undefined);
+    setIsCorrectOTP(true);
 
-    let ROLE_ID = await AsyncStorage.getItem('curr_role_id');
+    try {
+      let ROLE_ID = await AsyncStorage.getItem('curr_role_id');
 
-    console.log(
-      "numberfwsdfvwfdsdsrefwrq3rerr",
-      Number(values.otp),
-      mobileNumber
-    );
+      let postData = {
+        step: isUserExist ? "verify_login_otp" : "verify_signup_otp",
+        request_id: patientLoginData?.request_id,
+        otp: Number(values.otp),
+        username: "+91" + mobileNumber,
+        consent_text: "",
+      };
 
-    let postData = {
-      step: isUserExist ? "verify_login_otp" : "verify_signup_otp",
-      request_id: patientLoginData?.request_id,
-      otp: Number(values.otp),
-      username: "+91" + mobileNumber,
-      consent_text: "",
-    };
+      console.log("📤 OTP verification payload:", postData);
 
-    console.log("get otp payload", postData);
+      const data = await makeAPICall(
+        `${API_URL}/v2/login/${ROLE_ID}/`,
+        postData,
+        isUserExist ? "verify_login_otp" : "verify_signup_otp"
+      );
 
-    await fetch(`${API_URL}/v2/login/${ROLE_ID}/`, {
-      method: "POST",
-      body: JSON.stringify(postData),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    })
-      .then((response) => {
-        // const setCookieHeader = response.headers.get("Set-Cookie");
-        // if (setCookieHeader) {
-        //   storeCookies(setCookieHeader);
-        // }
-        // console.log(">>>>>>>>>>>>>>>>", response);
-        return response.json();
-      })
-      .then((data) => {
-        setLoading(false);
+      // Handle response based on next step
+      if (data.message === 'Invalid OTP') {
+        console.log("❌ Invalid OTP provided");
+        setIsCorrectOTP(false);
+        setOtp(Array(6).fill(''));
+        setErrorMessages(data.message || 'Invalid OTP. Please try again.');
+      } else if (data.next === "done") {
+        console.log("✅ OTP verified successfully, storing tokens");
+        await AsyncStorage.setItem("access_token", data.access_token);
+        await AsyncStorage.setItem("refresh_token", data.refresh_token);
+        
+        // Update dashboard state
+        dashboardDispatch({
+          type: "SET_PATIENT_LOGIN_DATA",
+          payload: {
+            ...patientLoginData,
+            currentStep: "webview",
+            accessToken: data.access_token,
+            refreshToken: data.refresh_token,
+          },
+        });
+        
+        navigation.navigate("WebviewScreen");
+      } else if (data.next === "fetch_auth_token") {
+        console.log("🔐 OTP verified, proceeding to fetch auth token");
+        await handleFetchAuthToken(patientLoginData.request_id, mobileNumber);
+      } else {
+        console.log("⚠️ Unexpected response:", data);
+        setErrorMessages(data.message || 'Verification failed. Please try again.');
+      }
 
-        console.log("user logged in =>>>>>>>>>>>>>>>>", data);
-        if (data.message == 'Invalid OTP') {
-          setIsCorrectOTP(false)
-          setOtp(Array(6).fill(''));
-				}
-        if (data.next === "done") {
-          AsyncStorage.setItem("access_token", data.access_token);
-          AsyncStorage.setItem("refresh_token", data.refresh_token);
-          navigation.navigate("WebviewScreen");
-        } else {
-          setLoading(false);
-        }
-      })
-      .catch((error) => {
-        setLoading(false);
-        console.error(error);
-      });
+    } catch (error) {
+      console.error("❌ OTP verification error:", error);
+      setErrorMessages('Verification failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   }
 
   const otpConfig = {
